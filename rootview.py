@@ -14,6 +14,7 @@ class ApiRoot(APIView):
         return Response({
         'obtain token': reverse('token_obtain_pair', request=request, format=format),
         'refresh token': reverse('token_refresh', request=request, format=format),
+        'signup' : reverse('signup', request=request, format=format)
         # Add more endpoints here
         })
 
