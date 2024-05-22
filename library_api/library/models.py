@@ -5,7 +5,6 @@ from library_api.fields import IncrementingField
 from library_api.models import TimestampedModel
 
 
-User = get_user_model()
 
 
 class Library(TimestampedModel):
