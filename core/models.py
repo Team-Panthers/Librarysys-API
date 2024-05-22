@@ -1,56 +1,71 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class Library(models.Model):
+
+class TimeStamp(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Library(TimeStamp):
+    name = models.CharField(max_length=100)
     no_of_rack = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"Library {self.library_id}"
+        return f"Library {self.name}"
 
-class Publisher(models.Model):
+
+class Publisher(TimeStamp):
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
 
-class Author(models.Model):
+
+class Author(TimeStamp):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
-class Book(models.Model):
-    book_id = models.AutoField(primary_key=True)
+
+class Book(TimeStamp):
     title = models.CharField(max_length=255)
-    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
-    authors = models.ManyToManyField(Author)
+    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name='books')
+    authors = models.ManyToManyField(Author, related_name='books')
+    library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='books')
 
     def __str__(self):
         return self.title
 
-class Rack(models.Model):
-    number = models.AutoField(primary_key=True)
-    library = models.ForeignKey(Library, on_delete=models.CASCADE)
-    book_copy = models.OneToOneField('BookCopy', on_delete=models.CASCADE, null=True, blank=True)
 
+class Rack(TimeStamp):
+    library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='racks')
+    book_copy = models.OneToOneField('BookCopy', on_delete=models.CASCADE, null=True, blank=True, related_name='rack')
+    rack_number = models.PositiveIntegerField(unique=True)
 
     def __str__(self):
-        return f"Rack {self.rack_number}"
+        return f"Rack {self.rack_number} of Library {self.library.name}"
 
-class BookCopy(models.Model):
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+class BookCopy(TimeStamp):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='copies')
     is_borrowed = models.BooleanField(default=False)
+    library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='book_copies')
 
     def __str__(self):
-        return f"Copy {self.book_copy_id} of {self.book.title}"
+        return f"Copy {self.id} of {self.book.title} in {self.library.name}"
 
-class BookBorrow(models.Model):
-    book_copy = models.ForeignKey(BookCopy, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class BookBorrow(TimeStamp):
+    book_copy = models.ForeignKey(BookCopy, on_delete=models.CASCADE, related_name='borrows')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_borrows')
     borrow_date = models.DateField()
     due_date = models.DateField()
 
     def __str__(self):
-        return f"Borrow {self.borrow_id}"
+        return f"Borrow {self.id} by {self.user.username}"
