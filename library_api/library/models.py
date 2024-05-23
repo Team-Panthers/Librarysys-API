@@ -12,7 +12,10 @@ class Library(TimestampedModel):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"Library-{self.pk}-{self.name}"
+        return f"{self.pk}-{self.name}"
+
+    class Meta:
+        verbose_name_plural = "libraries"
 
 
 from book.models import BookCopy
@@ -29,6 +32,6 @@ class Rack(TimestampedModel):
         ordering = ['-rack_no', "-library"]
 
     def __str__(self):
-        return f"Rack {self.rack_no} Library {self.library.name}"
+        return f"Rack {self.rack_no} {self.library.name}"
 
 

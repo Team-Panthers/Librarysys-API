@@ -60,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id,"'email', 'libraries')
+        fields = ("id", "email", 'libraries')
 
     def get_libraries(self, obj):
         user_library_relations = user_service.get_user_libraries(user=obj)
