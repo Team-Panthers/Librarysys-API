@@ -21,6 +21,6 @@ from rootview import ApiRoot
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', ApiRoot.as_view(), name='api-root'),
-    # path('api/', include('core.urls')),
+    path('', include('core.urls')),
     path('api/', include('users.urls'))
 ]

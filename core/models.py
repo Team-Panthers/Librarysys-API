@@ -1,5 +1,7 @@
+from typing import Iterable
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Max
 
 
 class TimeStamp(models.Model):
@@ -42,7 +44,6 @@ class Book(TimeStamp):
     def __str__(self):
         return self.title
 
-
 class Rack(TimeStamp):
     library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='racks')
     book_copy = models.OneToOneField('BookCopy', on_delete=models.CASCADE, null=True, blank=True, related_name='rack')
@@ -51,15 +52,14 @@ class Rack(TimeStamp):
     def __str__(self):
         return f"Rack {self.rack_number} of Library {self.library.name}"
 
-
 class BookCopy(TimeStamp):
+    bookcopy_id = models.CharField(max_length=100, unique=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='copies')
     is_borrowed = models.BooleanField(default=False)
     library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='book_copies')
 
     def __str__(self):
         return f"Copy {self.id} of {self.book.title} in {self.library.name}"
-
 
 class BookBorrow(TimeStamp):
     book_copy = models.ForeignKey(BookCopy, on_delete=models.CASCADE, related_name='borrows')
