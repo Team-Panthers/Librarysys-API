@@ -34,7 +34,7 @@ class Book(TimestampedModel):
     library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='books')
 
     def __str__(self):
-        return f"{self.title}-{self.library.name}"
+        return f"Book {self.book_id}-{self.library.name}"
 
     class Meta:
         unique_together = ('library', 'book_id')

@@ -4,6 +4,8 @@ from .models import Library
 from .services.library_service import library_service
 
 
+
+
 class LibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Library
@@ -22,3 +24,21 @@ class LibrarySerializer(serializers.ModelSerializer):
         if error:
             raise serializers.ValidationError(error)
         return library
+
+
+class LibraryBookAddSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    publishers = serializers.ListField(
+        child=serializers.CharField(max_length=255)
+    )
+    authors = serializers.ListField(
+        child=serializers.CharField(max_length=255)
+    )
+    library = serializers.PrimaryKeyRelatedField(queryset=Library.objects.all())
+    number_of_copies = serializers.IntegerField(min_value=1)
+
+    def create(self, validated_data):
+        book, error = library_service.add_book(**validated_data)
+        if error:
+            raise serializers.ValidationError(error)
+        return book
