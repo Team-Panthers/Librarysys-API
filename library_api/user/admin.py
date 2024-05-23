@@ -25,9 +25,17 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('email', 'password1', 'password2', 'first_name', 'last_name'),
         }),
     )
-    list_display = ('email', 'first_name', 'last_name', 'is_staff',)
+    list_display = ('email', 'first_name', 'last_name', 'is_staff',"is_admin_any_library")
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
+
+    def is_admin_any_library(self, obj):
+        if obj.is_superuser:
+            return True
+        return obj.library_relations.filter(is_admin=True).exists()
+
+    is_admin_any_library.short_description = 'Admin for Any Library'
+    is_admin_any_library.boolean = True
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

@@ -8,6 +8,7 @@ from library.models import Library
 
 
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -34,6 +35,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
 
     objects = CustomUserManager()
+
     REQUIRED_FIELDS = []
 
     def is_library_admin(self, library):
@@ -48,10 +50,13 @@ class CustomUser(AbstractUser):
 
 
 User = get_user_model()
+
+
 class UserLibraryRelation(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='library_relations')
     library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='user_relations')
     is_admin = models.BooleanField(default=False)
+    max_num_books = models.IntegerField(default=5)
 
     class Meta:
         unique_together = ('user', 'library')
