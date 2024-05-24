@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import LibraryListCreateView,LibraryUpdateView,LibraryAddBookApiView,LibraryBorrowBookApiView,LibraryBorrowBookCopyApiView,LibraryReturnBookCopyApiView
+from .views import LibraryListCreateView,LibraryUpdateView,LibraryAddBookApiView,LibraryBorrowBookApiView,LibraryBorrowBookCopyApiView,LibraryReturnBookCopyApiView,LibraryAvailableBookList,LibraryAllBookList,LibraryAllBookCopies,LibraryAvailableBookCopies,LibraryBookGetBookCopies
 
 urlpatterns = [
     path("", LibraryListCreateView.as_view(), name="library_list_create"),
@@ -8,7 +8,16 @@ urlpatterns = [
 
     path("add-book/<int:library_id>/", LibraryAddBookApiView.as_view(), name="library_add_book"),
     path("borrow-book/<int:library_id>/", LibraryBorrowBookApiView.as_view(), name="library_borrow_book"),
-    path("borrow-book-copy/<int:library_id>", LibraryBorrowBookCopyApiView.as_view(), name="library_borrow_book_copy"),
+    path("borrow-book-copy/<int:library_id>/", LibraryBorrowBookCopyApiView.as_view(), name="library_borrow_book_copy"),
 
-    path("return-book/<int:library_id>", LibraryReturnBookCopyApiView.as_view(), name="library_return_book"),
+    path("return-book/<int:library_id>/", LibraryReturnBookCopyApiView.as_view(), name="library_return_book"),
+
+    path("available-books/<int:library_id>/", LibraryAvailableBookList.as_view(), name="library_book_list"),
+    path("all-books/<int:library_id>/", LibraryAllBookList.as_view(), name="library_all_book_list"),
+    
+    path("available-book-copies/<int:library_id>/", LibraryAvailableBookCopies.as_view(), name="library_available_book_copies"),
+    path("all-book-copies/<int:library_id>/", LibraryAllBookCopies.as_view(), name="library_all_book_copies"),
+    
+    path("book-copies/<int:library_id>/<int:pk>/", LibraryBookGetBookCopies.as_view(), name="library_get_bookcopies_for_book"),
+
 ]

@@ -91,6 +91,18 @@ class BookCopyService:
             return rack, None
         return None,"No available Rack"
 
+    def all_book_copy_available(self, library):
+        return self.all().filter(library=library)
+
+    def book_copy_available(self, library):
+        # Filter out book copies that are not borrowed
+        available_book_copies = self.all_book_copy_available(library).filter(is_borrowed=False)
+
+        return available_book_copies
+
+    def all_copies_for_book(self, library, book):
+        return self.all().filter(library=library, book=book)
+
 
 
 

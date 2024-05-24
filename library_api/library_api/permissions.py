@@ -25,16 +25,4 @@ class IsLibraryAdmin(BasePermission):
                 raise PermissionDenied(detail="User is not an admin of this library.")
         raise PermissionDenied(detail="User is not authenticated.")
 
-    # def has_object_permission(self, request, view, obj):
-    #     print(obj)
-    #     # Check if the user is an admin for the library related to the object being accessed
-    #     if request.user:
-    #         try:
-    #             # Check if the user is an admin for the library
-    #             user_library_relation = UserLibraryRelation.objects.get(user=request.user, library=obj)
-    #             if not user_library_relation.is_admin:
-    #                 raise PermissionDenied(detail="User is not an admin of this library.")
-    #             return True
-    #         except UserLibraryRelation.DoesNotExist:
-    #             raise PermissionDenied(detail="User does not have a relation with this library.")
-    #     raise PermissionDenied(detail="User is not authenticated.")
+

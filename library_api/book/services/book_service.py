@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
+from django.db.models import Count
 
 from .bookcopy_service import book_copy_service
 
@@ -111,6 +113,20 @@ class BookService:
             return self.all().filter(library=library, id=book.id).exists()
         else:
             return self.all().filter(library=library, id=book.book.id).exists()
+
+    def all_book_available(self,library):
+        return self.all().filter(library=library)
+
+    def book_available(self, library):
+        # Annotate each book with the count of available copies
+        qs = self.all_book_available(library).annotate(
+            num_copies=Count('book_copies', filter=~Q(book_copies__is_borrowed=True))
+        )
+
+        # Filter out books with no available copies
+        available_books = qs.filter(num_copies__gt=0)
+
+        return available_books
 
 
 book_service = BookService(Book,Publisher,Author,rack_service,book_copy_service,user_service)

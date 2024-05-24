@@ -1,12 +1,13 @@
 from .permissions import IsLibraryAdmin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
+from rest_framework.exceptions import NotFound
 
 from rest_framework import status
 from rest_framework.response import Response
 
 from library.models import Library
-
+from library.services.library_service import library_service
 class UserContextMixin():
 
     def get_serializer_context(self):
@@ -47,3 +48,19 @@ class LibraryAdminPermissionMixin():
 class LibraryAdminCreateMixin(LibraryAdminPermissionMixin, LibraryContextMixin, CreateResponseMixin,
                                generics.CreateAPIView):
     pass
+
+class GetLibraryMixin:
+    def get_library(self):
+        library_id = self.kwargs.get('library_id')
+        try:
+            return library_service.all().get(id=library_id)
+        except library_service.Library.DoesNotExist:
+            raise NotFound("Library does not exist")
+
+class LibraryListMixin(GetLibraryMixin,generics.ListAPIView):
+    pass
+
+
+class LibraryRetrieveMixin(GetLibraryMixin,generics.RetrieveAPIView):
+    pass
+
