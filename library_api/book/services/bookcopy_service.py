@@ -57,7 +57,7 @@ class BookCopyService:
                 return storage, None
             return rack, None
         except BookBorrow.DoesNotExist:
-            return None, "This book copy is not marked as borrowed by the user"
+            return None, "This book copy is not borrowed"
 
     def move_book_from_storage(self,library):
         storage = self.Storage.objects.filter(library=library).first()
