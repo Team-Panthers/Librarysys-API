@@ -1,15 +1,14 @@
+from book.services.book_service import book_service
 from django.db import transaction
 from library.models import Library, Rack
 from user.models import UserLibraryRelation
 
 from .rack_service import rack_service
-from book.services.book_service import book_service
-
 
 
 class LibraryService:
 
-    def __init__(self, Library, Rack, UserLibraryRelation, rack_service,book_service):
+    def __init__(self, Library, Rack, UserLibraryRelation, rack_service, book_service):
         self.Library = Library
         self.Rack = Rack
         self.UserLibraryRelation = UserLibraryRelation
@@ -28,8 +27,6 @@ class LibraryService:
             return library, None
         except Exception as e:
             return None, f"An error occurred: {e}"
-
-
 
     def edit_library(self, library, **kwargs):
         try:
@@ -52,12 +49,37 @@ class LibraryService:
         libraries = self.Library.objects.all()
         return libraries
 
+    def get(self, library_id):
+        try:
+            library = self.all().get(id=library_id)
+            return library
+        except Exception:
+            return None
+
     def add_book(self, **kwargs):
         try:
             book, error = self.book_service.create_book(**kwargs)
             if error:
                 return None, error
-            return book,None
+            return book, None
+        except Exception as e:
+            return None, str(e)
+
+    def borrow_book(self, library, book, user, due_date):
+        try:
+            borrow_book, error = self.book_service.borrow_book(library, book, user, due_date)
+            if error:
+                return None, error
+            return borrow_book, error
+        except Exception as e:
+            print(e)
+            return None, e
+
+
+    def return_book(self, library, book_copy):
+        try:
+            rack, error = self.book_service.return_book(library, book_copy)
+            return rack, error
         except Exception as e:
             return None, str(e)
 

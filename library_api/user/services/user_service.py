@@ -21,7 +21,7 @@ class UserService:
         return UserLibraryRelation.objects.filter(user=user)
 
     def can_user_borrow(self, user, library):
-        return not (self.has_user_defaulted(user) and self.has_user_reached_limit(user, library))
+        return not (self.has_user_defaulted(user,library) or self.has_user_reached_limit(user, library))
 
     def get_user_borrowed_books(self, user, library):
         borrowed_books = self.get_all_user_borrowed_books(user).filter(library=library)
@@ -37,16 +37,20 @@ class UserService:
         defaulted_books = [book_borrow for book_borrow in borrowed_books if book_borrow.is_overdue]
         return defaulted_books
 
-    def has_user_defaulted(self, user):
+    def has_user_defaulted(self, user,library):
+        if self.is_user_library_admin(user,library):
+            return False
+
         return len(self.user_defaulted_books(user)) > 0
 
     def has_user_reached_limit(self, user, library):
         user_relation = self.get_user_libraries(user).filter(library=library)
         total_borrowed = self.get_user_borrowed_books(user, library).count()
         if user_relation.exists():
+            user_relation = user_relation.first()
             if user_relation.is_admin:
                 return False
-            return total_borrowed >= user_relation.first().max_num_books
+            return total_borrowed >= user_relation.max_num_books
         else:
             _, error = self.add_user_to_library(library, user, is_admin=False)
             if error:

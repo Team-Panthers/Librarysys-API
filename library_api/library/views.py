@@ -1,12 +1,11 @@
+from book.serializers import BookSerializer, BorrowBookSerializer
+from library_api.mixins import UserContextMixin, LibraryAdminPermissionMixin,LibraryAdminCreateMixin
 from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework import status
 
-from .serializers import LibrarySerializer,LibraryBookAddSerializer
+from .models import Rack
+from .serializers import LibrarySerializer, LibraryBookAddSerializer, LibraryBorrowBookSerializer, \
+    LibraryBorrowBookCopy, LibraryReturnSerializer, RackSerializer, StorageSerializer
 from .services.library_service import library_service
-from book.serializers import BookSerializer
-
-from library_api.mixins import UserContextMixin,LibraryAdminPermissionMixin
 
 
 # Create your views here.
@@ -14,25 +13,35 @@ from library_api.mixins import UserContextMixin,LibraryAdminPermissionMixin
 class LibraryListCreateView(UserContextMixin, generics.ListCreateAPIView):
     serializer_class = LibrarySerializer
     queryset = library_service.all()
+    
 
 
 class LibraryUpdateView(UserContextMixin,LibraryAdminPermissionMixin, generics.RetrieveUpdateAPIView):
+    library_url_name = "pk"
     serializer_class = LibrarySerializer
     queryset = library_service.all()
     http_method_names = ['get', 'patch']
 
 
-class LibraryAddBookApiView(LibraryAdminPermissionMixin, generics.CreateAPIView):
+class LibraryAddBookApiView(LibraryAdminCreateMixin):
     serializer_class = LibraryBookAddSerializer
+    response_serializer_class = BookSerializer
 
-    def get_queryset(self):
-        return []
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            book = serializer.save()
-            return Response(BookSerializer(book).data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class LibraryBorrowBookApiView(LibraryAdminCreateMixin):
+    serializer_class = LibraryBorrowBookSerializer
+    response_serializer_class = BorrowBookSerializer
 
+
+class LibraryBorrowBookCopyApiView(LibraryAdminCreateMixin):
+    serializer_class = LibraryBorrowBookCopy
+    response_serializer_class = BorrowBookSerializer
+
+
+class LibraryReturnBookCopyApiView(LibraryAdminCreateMixin):
+    serializer_class = LibraryReturnSerializer
+
+    def get_response_serializer(self, instance):
+        if isinstance(instance, Rack):
+            return RackSerializer(instance)
+        return StorageSerializer(instance)

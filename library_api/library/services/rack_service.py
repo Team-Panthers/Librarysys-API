@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from library.models import Library, Rack
+from book.models import Book,BookCopy
 
 
 class RackService:
@@ -36,6 +37,27 @@ class RackService:
     def add_bookcopy_to_rack(self,rack, bookcopy):
         rack.book_copy = bookcopy
         rack.save()
+        return rack
+
+    def remove_bookcopy_from_rack(self,rack):
+        book_copy = rack.book_copy
+        rack.book_copy = None
+        rack.save()
+        return book_copy
+
+
+    def get_bookcopy_from_rack(self,library,book):
+        if isinstance(book,Book):
+            rack = self.all().filter(book_copy__book=book, library=library).first()
+        else:
+            rack = self.all().filter(book_copy=book, library=library).first()
+            
+        if rack:
+            book_copy = rack.book_copy
+            return book_copy
+        return None
+
+
 
 
 

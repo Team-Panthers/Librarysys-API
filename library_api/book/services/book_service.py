@@ -5,16 +5,18 @@ from .bookcopy_service import book_copy_service
 
 from book.models import Book,Publisher,Author,BookCopy
 from library.services.rack_service import rack_service
+from user.services.user_service import user_service
 
 class BookService:
 
-    def __init__(self,Book,Publisher,Author,rack_service,book_copy_service):
+    def __init__(self,Book,Publisher,Author,rack_service,book_copy_service,user_service):
         self.Book = Book
         self.BookCopy = BookCopy
         self.Publisher = Publisher
         self.Author = Author
         self.rack_service = rack_service
         self.book_copy_service = book_copy_service
+        self.user_service = user_service
 
     def all(self):
         return self.Book.objects.all()
@@ -72,6 +74,43 @@ class BookService:
             book.authors.add(author)
 
         book.save()
+        
+    def borrow_book(self,library,book,user,due_date):
+        if self.user_service.can_user_borrow(user, library):
+            if self.is_book_vaild(library,book):
+                book_copy = self.rack_service.get_bookcopy_from_rack(library,book)
+                if book_copy is not None:
+                    borrow_book, error = self.book_copy_service.borrow_book_copy(library,user,book_copy,due_date)
+                else:
+                    borrow_book, error = self.book_copy_service.get_book_from_storage(library,book,user,due_date)
+                if error is not None:
+                    return None, error
+                return borrow_book, None
+            if isinstance(book,BookCopy):
+                return None, "Invaild Book copy"
+            return None, "Invalid book"
+        else:
+            if self.user_service.has_user_defaulted(user,library):
+                return None, "User already exceeded the due date for a borrowed book and can't futher borrow until case resolved"
+
+            if self.user_service.has_user_reached_limit(user,library):
+                return None, "User already exceeded maximum limit for a borrowed book"
+        return None, "An error occurred"
 
 
-book_service = BookService(Book,Publisher,Author,rack_service,book_copy_service)
+
+
+    def return_book(self, library, book_copy):
+        rack, error = self.book_copy_service.return_book_copy(library, book_copy)
+        if error:
+            return None, error
+        return rack, None
+
+    def is_book_vaild(self,library,book):
+        if isinstance(book,Book):
+            return self.all().filter(library=library, id=book.id).exists()
+        else:
+            return self.all().filter(library=library, id=book.book.id).exists()
+
+
+book_service = BookService(Book,Publisher,Author,rack_service,book_copy_service,user_service)
