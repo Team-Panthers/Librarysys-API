@@ -1,16 +1,19 @@
 from book.serializers import BookSerializer, BorrowBookSerializer,BookCopySerializer
 
-from library_api.mixins import UserContextMixin, LibraryAdminPermissionMixin,LibraryAdminCreateMixin,LibraryListMixin,LibraryRetrieveMixin
+from library_api.mixins import UserContextMixin, LibraryAdminPermissionMixin,LibraryAdminCreateMixin,LibraryListMixin,LibraryRetrieveMixin,BookSearchMixin,LibraryContextMixin
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from rest_framework import status
 
 from .models import Rack
 from .serializers import LibrarySerializer, LibraryBookAddSerializer, LibraryBorrowBookSerializer, \
-    LibraryBorrowBookCopy, LibraryReturnSerializer, RackSerializer, StorageSerializer
+    LibraryBorrowBookCopy, LibraryReturnSerializer, RackSerializer, StorageSerializer,UserSerializer
 from .services.library_service import library_service
 from book.services.book_service import book_service
 from book.services.bookcopy_service import book_copy_service
+
+from user.services.user_service import user_service
 
 
 # Create your views here.
@@ -20,9 +23,7 @@ class LibraryListCreateView(UserContextMixin, generics.ListCreateAPIView):
     queryset = library_service.all()
     
 
-
-class LibraryUpdateView(UserContextMixin,LibraryAdminPermissionMixin, generics.RetrieveUpdateAPIView):
-    library_url_name = "pk"
+class LibraryUpdateView(LibraryAdminPermissionMixin, UserContextMixin,generics.RetrieveUpdateAPIView):
     serializer_class = LibrarySerializer
     queryset = library_service.all()
     http_method_names = ['get', 'patch']
@@ -51,46 +52,68 @@ class LibraryReturnBookCopyApiView(LibraryAdminCreateMixin):
             return RackSerializer(instance)
         return StorageSerializer(instance)
 
-class LibraryAvailableBookList(LibraryListMixin):
+class LibraryAvailableBookList(LibraryListMixin,BookSearchMixin):
     serializer_class = BookSerializer
 
     def get_queryset(self):
-        library = self.get_library()
+        library = self.library
         return book_service.book_available(library)
 
-class LibraryAllBookList(LibraryListMixin):
+class LibraryAllBookList(LibraryListMixin,BookSearchMixin):
     serializer_class = BookSerializer
 
     def get_queryset(self):
-        library = self.get_library()
-        return book_service.all_book_available(library)
+        library = self.library
+        qs = book_service.all_book_available(library)
+        return qs
 
 
 class LibraryAllBookCopies(LibraryListMixin):
     serializer_class = BookCopySerializer
+    
     def get_queryset(self):
-        library = self.get_library()
+        library = self.library
         return book_copy_service.all_book_copy_available(library)
     
 class LibraryAvailableBookCopies(LibraryListMixin):
     serializer_class = BookCopySerializer
 
     def get_queryset(self):
-        library = self.get_library()
+        library = self.library
         return book_copy_service.book_copy_available(library)
 
 class LibraryBookGetBookCopies(LibraryRetrieveMixin):
-    def retrieve(self, request, *args, **kwargs):
-        library = self.get_library()
-        book = self.get_object()
+    serializer_class = BookCopySerializer
+    obj_error_message = "Book Not Found in the Library"
 
-        if not book_service.is_book_vaild(library,book):
-            raise NotFound("Book is not available in this library")
-        book_copies = book_copy_service.all_copies_for_book(library,book)
-        serializer = BookCopySerializer(book_copies, many=True)
-        return Response(serializer.data)
+    
+    def get_object_queryset(self):
+        library = self.library
+        qs = book_service.all_book_available(library)
+        return qs
 
     def get_queryset(self):
-        library = self.get_library()
-        return book_service.all_book_available(library)
+        library = self.library
+        book = self.get_object()
+        return book_copy_service.all_copies_for_book(library,book)
+    
+class LibraryUsersList(LibraryAdminPermissionMixin,LibraryContextMixin,LibraryListMixin):
+    serializer_class = UserSerializer
 
+    def get_queryset(self):
+        library = self.library
+        return user_service.library_users(library)
+    
+
+class LibraryUserRetrieve(LibraryAdminPermissionMixin,LibraryContextMixin,generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+    
+    def get_queryset(self):
+        library = self.library
+        return user_service.library_users(library)
+    
+
+    
+
+        
+        

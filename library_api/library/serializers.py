@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from .models import Library,Rack,Storage
 from .services.library_service import library_service
+from user.services.user_service import user_service
 
 from book.models import BookBorrow, Book,BookCopy
 
@@ -98,3 +99,28 @@ class StorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Storage
         fields = "__all__"
+
+class BookCopySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BookCopy
+        fields = ["id",'order','book_copy_id','book']
+
+class LibraryBorrowBookCopySerializer(serializers.ModelSerializer):
+    book_copy = BookCopySerializer()
+    class Meta:
+        model = BookBorrow
+        fields = ["id","due_date",'book_copy']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    borrowed_books = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ("id", "email", "borrowed_books")
+
+    def get_borrowed_books(self, obj):
+        library = self.context.get('library')
+        books = user_service.get_user_borrowed_books(obj, library)
+        return LibraryBorrowBookCopySerializer(books, many=True).data

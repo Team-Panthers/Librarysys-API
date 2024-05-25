@@ -1,25 +1,71 @@
-from .permissions import IsLibraryAdmin
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics
-from rest_framework.exceptions import NotFound
-
-from rest_framework import status
-from rest_framework.response import Response
-
+from book.services.book_service import book_service
 from library.models import Library
 from library.services.library_service import library_service
-class UserContextMixin():
+from rest_framework import generics
+from rest_framework import status
+from rest_framework.exceptions import NotFound
+from django.core.exceptions import FieldDoesNotExist
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from .permissions import IsLibraryAdmin
+
+
+class ConfirmLibraryDispatchMixin():
+    library_lookup_field = "pk"
+    library_lookup_url_kwarg = "library_id"
+    _library = None
+    library_error_msg = 'Library not found'
+    
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not(self.library_lookup_field or self.library_lookup_url_kwarg):
+            raise ValueError('library_lookup_field or library_lookup_url_kwarg must be set')
+        if self.library_lookup_field == None:
+            raise ValueError("library_lookup_field must be set")
+        lookup_value = self.kwargs.get(self.library_lookup_url_kwarg or self.library_lookup_field)
+        if lookup_value is None:
+            raise ValueError(f"URL kwarg '{self.library_lookup_field}' must be provided")
+           
+        try:
+            if not self.library_lookup_field == "pk":
+                Library._meta.get_field(self.library_lookup_field)
+        except FieldDoesNotExist:
+            raise ValueError(f"Field '{self.library_lookup_field}' does not exist on Library model")
+        try:
+            library = library_service.all().get(**{self.library_lookup_field: lookup_value})
+            self._library = library
+        except library_service.Library.DoesNotExist:
+            self.library_error_msg = 'Library does not exist'
+            self._library = None
+        except library_service.Library.MultipleObjectsReturned:
+            self.library_error_msg = "Multiple libraries found for the given criteria"
+            self._library = None
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    @property
+    def library(self):
+        if self._library is None:
+            raise NotFound(self.library_error_msg)
+        return self._library
+    
+
+
+class UserContextMixin:
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
 
-class LibraryContextMixin():
-    library_url_name = "library_id"
+
+class LibraryContextMixin:
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['library'] = Library.objects.get(id=self.kwargs[self.library_url_name])
+        if self.library is None:
+            raise ValueError("library instance was not provided")
+        context['library'] = self.library
         return context
 
 
@@ -42,25 +88,70 @@ class CreateResponseMixin:
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LibraryAdminPermissionMixin():
+
+class RetrieveResponseMixin:
+    obj_error_message = "Object does not exist"
+    object_queryset = None
+
+    def get_object_queryset(self):
+        qs = None
+        if self.object_queryset is not None:
+            qs = self.object_queryset
+        return qs
+
+    def get_object(self):
+        try:
+            lookup_value = self.kwargs.get(self.lookup_url_kwarg or self.lookup_field)
+            qs = self.get_object_queryset()
+            object_model = qs.model
+            if qs == None:
+                raise ValueError("object_queryset must be set")
+            filter_kwargs = {self.lookup_field: lookup_value}
+            obj = qs.get(**filter_kwargs)
+
+            if obj is None:
+                raise NotFound(self.obj_error_message)
+        
+        except object_model.DoesNotExist:
+            raise NotFound(self.obj_error_message)
+        except object_model.MultipleObjectsReturned:
+            raise ValueError("Mutiple Object was return to returned")
+
+        return obj
+
+    def retrieve(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class BookSearchMixin:
+
+    def filter_queryset(self, queryset):
+        query = self.request.GET.get('title', "")
+        authors_str = self.request.GET.get('authors', "")
+        publishers_str = self.request.GET.get('publishers', "")
+
+        authors = authors_str.split(',') if authors_str else []
+        publishers = publishers_str.split(',') if publishers_str else []
+
+        queryset = book_service.search_books(queryset, query, publishers, authors)
+
+        return super().filter_queryset(queryset)
+
+
+class LibraryAdminPermissionMixin(ConfirmLibraryDispatchMixin):
     permission_classes = [IsAuthenticated, IsLibraryAdmin]
 
+
 class LibraryAdminCreateMixin(LibraryAdminPermissionMixin, LibraryContextMixin, CreateResponseMixin,
-                               generics.CreateAPIView):
+                              generics.CreateAPIView):
     pass
 
-class GetLibraryMixin:
-    def get_library(self):
-        library_id = self.kwargs.get('library_id')
-        try:
-            return library_service.all().get(id=library_id)
-        except library_service.Library.DoesNotExist:
-            raise NotFound("Library does not exist")
-
-class LibraryListMixin(GetLibraryMixin,generics.ListAPIView):
+class LibraryListMixin(ConfirmLibraryDispatchMixin,generics.ListAPIView):
     pass
 
 
-class LibraryRetrieveMixin(GetLibraryMixin,generics.RetrieveAPIView):
+class LibraryRetrieveMixin(ConfirmLibraryDispatchMixin, RetrieveResponseMixin, generics.RetrieveAPIView):
     pass
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import LibraryListCreateView,LibraryUpdateView,LibraryAddBookApiView,LibraryBorrowBookApiView,LibraryBorrowBookCopyApiView,LibraryReturnBookCopyApiView,LibraryAvailableBookList,LibraryAllBookList,LibraryAllBookCopies,LibraryAvailableBookCopies,LibraryBookGetBookCopies
+from .views import LibraryListCreateView,LibraryUpdateView,LibraryAddBookApiView,LibraryBorrowBookApiView,LibraryBorrowBookCopyApiView,LibraryReturnBookCopyApiView,LibraryAvailableBookList,LibraryAllBookList,LibraryAllBookCopies,LibraryAvailableBookCopies,LibraryBookGetBookCopies,LibraryUsersList,LibraryUserRetrieve
 
 urlpatterns = [
     path("", LibraryListCreateView.as_view(), name="library_list_create"),
@@ -13,11 +13,14 @@ urlpatterns = [
     path("return-book/<int:library_id>/", LibraryReturnBookCopyApiView.as_view(), name="library_return_book"),
 
     path("available-books/<int:library_id>/", LibraryAvailableBookList.as_view(), name="library_book_list"),
-    path("all-books/<int:library_id>/", LibraryAllBookList.as_view(), name="library_all_book_list"),
+    path("all-books/<int:library_id>/", LibraryAllBookList.as_view(), name="library_all_book_list_and_search"),
     
     path("available-book-copies/<int:library_id>/", LibraryAvailableBookCopies.as_view(), name="library_available_book_copies"),
     path("all-book-copies/<int:library_id>/", LibraryAllBookCopies.as_view(), name="library_all_book_copies"),
     
     path("book-copies/<int:library_id>/<int:pk>/", LibraryBookGetBookCopies.as_view(), name="library_get_bookcopies_for_book"),
+    
+    path("users/<int:library_id>/", LibraryUsersList.as_view(), name="library_users"),
+    path("user/<int:library_id>/<int:pk>/", LibraryUserRetrieve.as_view(), name="library_user"),
 
 ]

@@ -3,6 +3,10 @@ from django.db import transaction
 
 from user.models import UserLibraryRelation
 
+from book.models import BookBorrow
+
+
+
 User = get_user_model()
 
 
@@ -24,12 +28,12 @@ class UserService:
         return not (self.has_user_defaulted(user,library) or self.has_user_reached_limit(user, library))
 
     def get_user_borrowed_books(self, user, library):
-        borrowed_books = self.get_all_user_borrowed_books(user).filter(library=library)
+        borrowed_books = BookBorrow.objects.filter(user=user,library=library,is_returned=False)
         return borrowed_books
 
     @staticmethod
     def get_all_user_borrowed_books(user):
-        borrowed_books = user.books_borrowed.filter(is_returned=False)
+        borrowed_books = BookBorrow.objects.filter(user=user,is_returned=False)
         return borrowed_books
 
     def user_defaulted_books(self, user):
@@ -68,5 +72,12 @@ class UserService:
     def is_user_library_admin(user, library):
         return user.is_library_admin(library)
 
+    def library_users(self,library):
+        user_relations = UserLibraryRelation.objects.filter(library=library, is_admin=False)
+        users = self.all().filter(id__in=user_relations.values('user_id'))
+        return users
+        
+    def all(self):
+        return User.objects.all()
 
 user_service = UserService()

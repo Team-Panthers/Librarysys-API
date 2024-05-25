@@ -128,5 +128,24 @@ class BookService:
 
         return available_books
 
+    def search_books(self,queryset, query=None, publishers=None, authors=None):
+
+        if query:
+            queryset = queryset.filter(title__icontains=query)
+
+        if publishers:
+            publisher_filters = Q()
+            for publisher in publishers:
+                publisher_filters |= Q(publisher__name__icontains=publisher)
+            queryset = queryset.filter(publisher_filters)
+
+        if authors:
+            author_filters = Q()
+            for author in authors:
+                author_filters |= Q(authors__name__icontains=author)
+            queryset = queryset.filter(author_filters)
+
+        return queryset.distinct()
+
 
 book_service = BookService(Book,Publisher,Author,rack_service,book_copy_service,user_service)
