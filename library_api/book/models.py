@@ -52,11 +52,11 @@ class BookCopy(TimestampedModel):
         return f"Copy {self.order} of {self.book}"
 
     class Meta:
-        unique_together = ('library', 'book', "order")
+        unique_together = (('library', 'book', 'order'), ('library', 'book_copy_id'))
 
 
 class BookBorrow(TimestampedModel):
-    book_copy = models.ForeignKey(BookCopy, on_delete=models.CASCADE)
+    book_copy = models.ForeignKey(BookCopy, on_delete=models.CASCADE,related_name="borrow")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books_borrowed')
     library = models.ForeignKey(Library, on_delete=models.CASCADE, related_name='books_borrowed')
     due_date = models.DateField()

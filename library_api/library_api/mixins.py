@@ -1,4 +1,5 @@
 from book.services.book_service import book_service
+from book.services.bookcopy_service import book_copy_service
 from library.models import Library
 from library.services.library_service import library_service
 from rest_framework import generics
@@ -129,13 +130,30 @@ class BookSearchMixin:
 
     def filter_queryset(self, queryset):
         query = self.request.GET.get('title', "")
+        book_id = self.request.GET.get('book_id', "")
         authors_str = self.request.GET.get('authors', "")
         publishers_str = self.request.GET.get('publishers', "")
 
         authors = authors_str.split(',') if authors_str else []
         publishers = publishers_str.split(',') if publishers_str else []
 
-        queryset = book_service.search_books(queryset, query, publishers, authors)
+        queryset = book_service.search_books(queryset, query, publishers, authors,book_id)
+
+        return super().filter_queryset(queryset)
+    
+class BookCopySearchMixin:
+    
+    def filter_queryset(self, queryset):
+        query = self.request.GET.get('title', "")
+        book_id = self.request.GET.get('book_id', "")
+        book_copy_id = self.request.GET.get('book_copy_id', "")
+        authors_str = self.request.GET.get('authors', "")
+        publishers_str = self.request.GET.get('publishers', "")
+
+        authors = authors_str.split(',') if authors_str else []
+        publishers = publishers_str.split(',') if publishers_str else []
+
+        queryset = book_copy_service.search_book_copies(queryset, query, publishers, authors,book_copy_id,book_id)
 
         return super().filter_queryset(queryset)
 

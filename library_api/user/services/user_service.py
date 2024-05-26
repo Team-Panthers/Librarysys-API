@@ -38,7 +38,7 @@ class UserService:
 
     def user_defaulted_books(self, user):
         borrowed_books = self.get_all_user_borrowed_books(user)
-        defaulted_books = [book_borrow for book_borrow in borrowed_books if book_borrow.is_overdue]
+        defaulted_books = [book_borrow for book_borrow in borrowed_books if book_borrow.is_overdue and not self.is_user_library_admin(user,book_borrow.library)]
         return defaulted_books
 
     def has_user_defaulted(self, user,library):

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
 
 from book.models import Book,Publisher,Author,BookCopy,BookBorrow
 from library.services.rack_service import rack_service
@@ -102,9 +103,43 @@ class BookCopyService:
 
     def all_copies_for_book(self, library, book):
         return self.all().filter(library=library, book=book)
+    
+    
+    def search_book_copies(self,queryset, query=None, publishers=None, authors=None,book_copy_id=None,book_id=None):
 
+        if query:
+            queryset = queryset.filter(title__icontains=query)
+            
+        try:
+            if book_copy_id:
+                if book_copy_id.isdigit():
+                    queryset = queryset.filter(book_copy_id=int(book_copy_id))
+                else:
+                    queryset = queryset.filter(book_copy_id=book_copy_id)
+        except:
+            queryset = queryset.none()
+                
+        try:
+            if book_id:
+                if book_id.isdigit():
+                    queryset = queryset.filter(book__id=int(book_id))
+                else:
+                    queryset = queryset.filter(book__id=book_id)
+        except:
+            queryset = queryset.none()
 
+        if publishers:
+            publisher_filters = Q()
+            for publisher in publishers:
+                publisher_filters |= Q(book__publisher__name__icontains=publisher)
+            queryset = queryset.filter(publisher_filters)
 
+        if authors:
+            author_filters = Q()
+            for author in authors:
+                author_filters |= Q(book__authors__name__icontains=author)
+            queryset = queryset.filter(author_filters)
 
+        return queryset.distinct()
 
 book_copy_service = BookCopyService(BookCopy,BookBorrow,Storage,rack_service)

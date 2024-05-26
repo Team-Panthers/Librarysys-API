@@ -128,10 +128,19 @@ class BookService:
 
         return available_books
 
-    def search_books(self,queryset, query=None, publishers=None, authors=None):
+    def search_books(self,queryset, query=None, publishers=None, authors=None,book_id=None):
 
         if query:
             queryset = queryset.filter(title__icontains=query)
+            
+        try:
+            if book_id:
+                if book_id.isdigit():
+                    queryset = queryset.filter(book_id=int(book_id))
+                else:
+                    queryset = queryset.filter(book_id=book_id)
+        except:
+            queryset = queryset.none()
 
         if publishers:
             publisher_filters = Q()
@@ -144,7 +153,6 @@ class BookService:
             for author in authors:
                 author_filters |= Q(authors__name__icontains=author)
             queryset = queryset.filter(author_filters)
-
         return queryset.distinct()
 
 

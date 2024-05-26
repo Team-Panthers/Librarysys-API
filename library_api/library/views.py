@@ -1,10 +1,7 @@
-from book.serializers import BookSerializer, BorrowBookSerializer,BookCopySerializer
+from book.serializers import BookSerializer, BorrowBookSerializer,BookCopySerializer,BookCopyDetailSerializer
 
-from library_api.mixins import UserContextMixin, LibraryAdminPermissionMixin,LibraryAdminCreateMixin,LibraryListMixin,LibraryRetrieveMixin,BookSearchMixin,LibraryContextMixin
+from library_api.mixins import UserContextMixin, LibraryAdminPermissionMixin,LibraryAdminCreateMixin,LibraryListMixin,LibraryRetrieveMixin,BookSearchMixin,LibraryContextMixin,BookCopySearchMixin
 from rest_framework import generics
-from rest_framework.exceptions import NotFound
-from rest_framework.response import Response
-from rest_framework import status
 
 from .models import Rack
 from .serializers import LibrarySerializer, LibraryBookAddSerializer, LibraryBorrowBookSerializer, \
@@ -52,14 +49,14 @@ class LibraryReturnBookCopyApiView(LibraryAdminCreateMixin):
             return RackSerializer(instance)
         return StorageSerializer(instance)
 
-class LibraryAvailableBookList(LibraryListMixin,BookSearchMixin):
+class LibraryAvailableBookList(BookSearchMixin,LibraryListMixin):
     serializer_class = BookSerializer
 
     def get_queryset(self):
         library = self.library
         return book_service.book_available(library)
 
-class LibraryAllBookList(LibraryListMixin,BookSearchMixin):
+class LibraryAllBookList(BookSearchMixin,LibraryListMixin):
     serializer_class = BookSerializer
 
     def get_queryset(self):
@@ -68,14 +65,14 @@ class LibraryAllBookList(LibraryListMixin,BookSearchMixin):
         return qs
 
 
-class LibraryAllBookCopies(LibraryListMixin):
+class LibraryAllBookCopies(BookCopySearchMixin,LibraryListMixin):
     serializer_class = BookCopySerializer
     
     def get_queryset(self):
         library = self.library
         return book_copy_service.all_book_copy_available(library)
     
-class LibraryAvailableBookCopies(LibraryListMixin):
+class LibraryAvailableBookCopies(BookCopySearchMixin,LibraryListMixin):
     serializer_class = BookCopySerializer
 
     def get_queryset(self):
@@ -113,6 +110,21 @@ class LibraryUserRetrieve(LibraryAdminPermissionMixin,LibraryContextMixin,generi
         return user_service.library_users(library)
     
 
+class LibraryAdminUpdateDeleteBook(LibraryAdminPermissionMixin,generics.RetrieveDestroyAPIView):
+    serializer_class = BookSerializer
+    
+    def get_queryset(self):
+        library = self.library
+        qs = book_service.all_book_available(library)
+        return qs
+
+class LibraryAdminUpdateDeleteBookCopy(LibraryAdminPermissionMixin,generics.RetrieveDestroyAPIView):
+    serializer_class = BookCopyDetailSerializer
+    
+    def get_queryset(self):
+        library = self.library
+        qs = book_copy_service.all_book_copy_available(library)
+        return qs
     
 
         
