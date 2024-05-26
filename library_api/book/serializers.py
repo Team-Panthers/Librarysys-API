@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import Book,BookBorrow,BookCopy,Publisher,Author
+from library.models import Library
 
 User = get_user_model()
 class BookSerializer(serializers.ModelSerializer):
@@ -35,13 +36,37 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "email")
+        
+class BookSerializer2(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ["id","title",'publisher',"authors"]
+        depth = 1
 
-
-class BorrowBookSerializer(serializers.ModelSerializer):
+class BorrowBookSerializer2(serializers.ModelSerializer):
     user = UserSerializer()
     class Meta:
         model = BookBorrow
         fields = ["id","due_date","is_overdue","user"]
+        
+class LibrarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Library
+        fields = ('id', 'name',)
+        
+class BookCopySerializer2(serializers.ModelSerializer):
+    book = BookSerializer2()
+    class Meta:
+        model = BookCopy
+        fields = ['id',"book_copy_id","book"]
+        
+class BorrowBookSerializer3(serializers.ModelSerializer):
+    library = LibrarySerializer()
+    book_copy = BookCopySerializer2()
+    class Meta:
+        model = BookBorrow
+        fields = ["due_date","is_overdue","book_copy","library"]
+        
 
       
 class BookCopyDetailSerializer(serializers.ModelSerializer):
@@ -54,7 +79,7 @@ class BookCopyDetailSerializer(serializers.ModelSerializer):
     def get_borrowed_by(self,obj):
         book_borrow = obj.borrow.all()
         book_borrow = book_borrow.filter(library=obj.library,is_returned=False).first()
-        data = BorrowBookSerializer(book_borrow).data
+        data = BorrowBookSerializer2(book_borrow).data
         return data
         
         

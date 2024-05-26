@@ -7,6 +7,8 @@ from library.models import Library
 
 from .services.user_service import user_service
 from .models import UserLibraryRelation
+from book.models import BookBorrow
+from book.serializers import BorrowBookSerializer3
 
 User = get_user_model()
 
@@ -57,11 +59,29 @@ class UserLibraryRelationSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     libraries = serializers.SerializerMethodField()
+    borrowed_books = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", 'libraries')
+        fields = ("id", "email", 'libraries',"borrowed_books")
 
     def get_libraries(self, obj):
         user_library_relations = user_service.get_user_libraries(user=obj)
         return UserLibraryRelationSerializer(user_library_relations, many=True).data
+    
+    def get_borrowed_books(self,obj):
+        books_borrowed = BookBorrow.objects.filter(is_returned=False,user=obj)
+        return BorrowBookSerializer3(books_borrowed, many=True).data
+    
+    
+class UserSerializer2(serializers.ModelSerializer):
+    borrowed_books = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ("id", "email","borrowed_books")
+    
+    def get_borrowed_books(self,obj):
+        books_borrowed = BookBorrow.objects.filter(is_returned=False,user=obj,library=self.context.get("library"))
+        return BorrowBookSerializer3(books_borrowed, many=True).data
+        
