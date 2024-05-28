@@ -5,6 +5,9 @@ from user.models import UserLibraryRelation
 
 from .rack_service import rack_service
 
+from library_api.cache import CacheManager
+
+library_cache = CacheManager(Library)
 
 class LibraryService:
 
@@ -23,7 +26,8 @@ class LibraryService:
             self.rack_service.create_rack(library, no_of_racks)
 
             self.UserLibraryRelation.objects.create(user=admin_user, library=library, is_admin=True)
-
+            library_cache.clear_cache_data()
+            library_cache.set_cache_data(library,library.id)
             return library, None
         except Exception as e:
             return None, f"An error occurred: {e}"
@@ -41,17 +45,25 @@ class LibraryService:
                 library.name = name
 
             library.save()
+            library_cache.clear_cache_data()
+            library_cache.set_cache_data(library,library.id)
             return library, None
         except Exception as e:
             return None, f"An error occurred: {e}"
 
     def all(self):
-        libraries = self.Library.objects.all()
+        libraries = library_cache.get_cache_data()
+        if not libraries:
+            libraries = self.Library.objects.all()
+            library_cache.set_cache_data(libraries)
         return libraries
 
     def get(self, library_id):
         try:
-            library = self.all().get(id=library_id)
+            library = library_cache.get_cache_data(library_id)
+            if not library:
+                library = self.all().get(id=library_id)
+                library_cache.set_cache_data(library,library_id)
             return library
         except Exception:
             return None

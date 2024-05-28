@@ -82,4 +82,5 @@ class BookCopyDetailSerializer(serializers.ModelSerializer):
         data = BorrowBookSerializer2(book_borrow).data
         return data
         
+    
         

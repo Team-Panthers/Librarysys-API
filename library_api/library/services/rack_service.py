@@ -3,6 +3,10 @@ from django.db import transaction
 from library.models import Library, Rack
 from book.models import Book,BookCopy
 
+from library_api.cache import CacheManager
+
+
+rack_cache = CacheManager(Rack)
 
 class RackService:
 
@@ -10,11 +14,16 @@ class RackService:
         self.Rack = Rack
 
     def all(self):
-        return self.Rack.objects.all()
+        racks = rack_cache.get_cache_data()
+        if not racks:
+            racks = self.Rack.objects.all()
+            rack_cache.set_cache_data(racks)
+        return racks
 
     @transaction.atomic
     def create_rack(self, library, no_of_racks):
         try:
+            rack_cache.clear_cache_data()
             for _ in range(int(no_of_racks)):
                 self.Rack.objects.create(library=library)
             return no_of_racks, None
@@ -35,11 +44,13 @@ class RackService:
         return self.number_of_available_racks(library) > 0
 
     def add_bookcopy_to_rack(self,rack, bookcopy):
+        rack_cache.clear_cache_data()
         rack.book_copy = bookcopy
         rack.save()
         return rack
 
     def remove_bookcopy_from_rack(self,rack):
+        rack_cache.clear_cache_data()
         book_copy = rack.book_copy
         rack.book_copy = None
         rack.save()

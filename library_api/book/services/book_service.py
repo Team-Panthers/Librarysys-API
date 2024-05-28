@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
@@ -8,6 +9,10 @@ from .bookcopy_service import book_copy_service
 from book.models import Book,Publisher,Author,BookCopy
 from library.services.rack_service import rack_service
 from user.services.user_service import user_service
+
+from library_api.cache import CacheManager
+
+book_cache = CacheManager(Book)
 
 class BookService:
 
@@ -21,14 +26,19 @@ class BookService:
         self.user_service = user_service
 
     def all(self):
-        return self.Book.objects.all()
+        books = book_cache.get_cache_data()
+        if not books:
+            books = self.Book.objects.all()
+            book_cache.set_cache_data(books)
+        return books
 
     @transaction.atomic
     def create_book(self, title, publishers, authors, library, number_of_copies):
         try:
+            
             if not title or not library:
                 raise ValueError("Title and library are required fields.")
-
+            book_cache.clear_cache_data()
             if self.is_rackspace_enough(library, number_of_copies):
                 # Create the book
                 book = self.Book.objects.create(title=title, library=library)

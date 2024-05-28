@@ -11,6 +11,7 @@ from book.services.book_service import book_service
 from book.services.bookcopy_service import book_copy_service
 
 from user.services.user_service import user_service
+from book.services.book_service import book_cache
 
 
 # Create your views here.
@@ -126,6 +127,12 @@ class LibraryAdminUpdateDeleteBookCopy(LibraryAdminPermissionMixin,generics.Retr
         qs = book_copy_service.all_book_copy_available(library)
         return qs
     
-
+    
+    def perform_destroy(self, instance):
+        book_cache.clear_cache_data()
+        book_cache.clear_cache_data(instance.id)
+        return super().perform_destroy(instance)
+    
+    
         
         

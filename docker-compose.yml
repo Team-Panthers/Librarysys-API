@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    container_name: library_api
+    build: .
+    command: python /code/library_api/manage.py runserver 0.0.0.0:8000
+    restart: always
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - cache
+
+  cache:
+    container_name: cache
+    image: redis:7.0.4
+    restart: always
+    volumes:
+      - ./data/cache:/data
+    ports:
+       - "6379:6379"
