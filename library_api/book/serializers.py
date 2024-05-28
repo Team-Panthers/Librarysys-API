@@ -5,8 +5,22 @@ from .models import Book,BookBorrow,BookCopy,Publisher,Author
 from library.models import Library
 
 User = get_user_model()
+
+class PublisherSeriaizer(serializers.ModelSerializer):
+    class Meta:
+        model = Publisher
+        fields = ['name']
+        
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ['name']
+        
+        
 class BookSerializer(serializers.ModelSerializer):
     copies_left = serializers.SerializerMethodField(read_only=True)
+    publisher = PublisherSeriaizer(read_only=True,many=True)
+    authors = AuthorSerializer(read_only=True,many=True)
     class Meta:
         model = Book
         fields = "__all__"
@@ -25,11 +39,6 @@ class BookCopySerializer(serializers.ModelSerializer):
         model = BookCopy
         fields = "__all__"
         
-        
-class BookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = "__all__"
         
 class UserSerializer(serializers.ModelSerializer):
     

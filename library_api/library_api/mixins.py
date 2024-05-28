@@ -162,14 +162,14 @@ class LibraryAdminPermissionMixin(ConfirmLibraryDispatchMixin):
     permission_classes = [IsAuthenticated, IsLibraryAdmin]
 
 
-class LibraryAdminCreateMixin(LibraryAdminPermissionMixin, LibraryContextMixin, CreateResponseMixin,
+class LibraryAdminCreateView(LibraryAdminPermissionMixin, LibraryContextMixin, CreateResponseMixin,
                               generics.CreateAPIView):
     pass
 
-class LibraryListMixin(ConfirmLibraryDispatchMixin,generics.ListAPIView):
+class LibraryListView(ConfirmLibraryDispatchMixin,generics.ListAPIView):
     pass
 
 
-class LibraryRetrieveMixin(ConfirmLibraryDispatchMixin, RetrieveResponseMixin, generics.RetrieveAPIView):
+class LibraryRetrieveView(ConfirmLibraryDispatchMixin, RetrieveResponseMixin, generics.RetrieveAPIView):
     pass
 
