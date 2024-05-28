@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 
 from datetime import timedelta
+from celery.schedules import crontab
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -144,10 +146,26 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=10),
 }
 
+# redis url
+REDIS_URL = "redis://cache:6379/1"
+
 
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://cache:6379/1',
+        'LOCATION': REDIS_URL,
     }
 }
+
+
+
+# celery setting
+CELERY_BROKER_URL = REDIS_URL 
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_TIMEZONE = 'UTC'
+
+
+
+# Email configuration for development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'

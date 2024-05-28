@@ -21,3 +21,25 @@ services:
       - ./data/cache:/data
     ports:
        - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A library_api worker --loglevel=info
+    working_dir: /code/library_api
+    restart: always
+    volumes:
+      - .:/code
+    depends_on:
+      - cache
+      - web
+
+  celery-beat:
+    build: .
+    command: celery -A library_api beat --loglevel=info
+    working_dir: /code/library_api
+    restart: always
+    volumes:
+      - .:/code
+    depends_on:
+      - cache
+      - web
