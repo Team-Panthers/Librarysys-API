@@ -18,12 +18,16 @@ from book.services.book_service import book_cache
 
 class LibraryListCreateView(UserContextMixin, generics.ListCreateAPIView):
     serializer_class = LibrarySerializer
-    queryset = library_service.all()
+    def get_queryset(self):
+        return library_service.all()
     
 
 class LibraryUpdateView(LibraryAdminPermissionMixin, UserContextMixin,generics.RetrieveUpdateAPIView):
     serializer_class = LibrarySerializer
-    queryset = library_service.all()
+    
+    def get_queryset(self):
+        return library_service.all()
+
     http_method_names = ['get', 'patch']
 
 
