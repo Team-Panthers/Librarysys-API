@@ -24,10 +24,11 @@ class ConfirmLibraryDispatchMixin():
             raise ValueError('library_lookup_field or library_lookup_url_kwarg must be set')
         if self.library_lookup_field == None:
             raise ValueError("library_lookup_field must be set")
-        lookup_value = self.kwargs.get(self.library_lookup_url_kwarg or self.library_lookup_field)
+        lookup_value = kwargs.get(self.library_lookup_url_kwarg) or kwargs.get(self.library_lookup_field)
+        
         if lookup_value is None:
             raise ValueError(f"URL kwarg '{self.library_lookup_field}' must be provided")
-           
+        
         try:
             if not self.library_lookup_field == "pk":
                 Library._meta.get_field(self.library_lookup_field)
