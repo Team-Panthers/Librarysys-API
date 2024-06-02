@@ -3,14 +3,14 @@
 
 ## Description
 
-    This API project is designed to manage a library. It allows the creation of multiple libraries in the database with each management and admin access of each library given to the users who created them. It also handles the borrowing of books from any library by users.
+This API project is designed to manage a library. It allows the creation of multiple libraries in the database with each management and admin access of each library given to the users who created them. It also handles the borrowing of books from any library by users.
 
 ## Requirements
 
-    - Python
-    - Django
-    - Docker
-    - Redis
+- Python
+- Django
+- Docker
+- Redis
 
 ## Installation
     1. Clone the repository:
