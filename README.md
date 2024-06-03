@@ -46,4 +46,9 @@ This API project is designed to manage a library. It allows the creation of mult
     docker-compose --build
     ```
 
-6. The development server is up and running. Access it at [http://127.0.0.1:8000/swagger/](http://127.0.0.1:8000/swagger/) 
+6. The development server is up and running. Access it at [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+
+
+### Documentation
+
+Access the postman documentation are [doc](https://documenter.getpostman.com/view/29680874/2sA3Qy59Gm)
